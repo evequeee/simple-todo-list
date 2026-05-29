@@ -3,10 +3,13 @@
   --primary-hover: #4338ca;
   --danger-color: #ef4444;
   --danger-hover: #dc2626;
+  --success-color: #10b981;
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
   --border-color: #e5e7eb;
   --bg-light: #f9fafb;
+  --error-color: #ef4444;
+  --error-bg: #fef2f2;
 }
 
 * {
@@ -49,6 +52,28 @@ h1 {
   text-align: center;
 }
 
+.error-message {
+  background-color: var(--error-bg);
+  color: var(--error-color);
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid var(--error-color);
+  margin-bottom: 16px;
+  font-size: 14px;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .input-group {
   display: flex;
   gap: 8px;
@@ -69,6 +94,12 @@ h1 {
   border-color: var(--primary-color);
 }
 
+.task-input:disabled {
+  background-color: var(--bg-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .add-button {
   padding: 12px 24px;
   background-color: var(--primary-color);
@@ -81,12 +112,17 @@ h1 {
   transition: background-color 0.2s;
 }
 
-.add-button:hover {
+.add-button:hover:not(:disabled) {
   background-color: var(--primary-hover);
 }
 
-.add-button:active {
+.add-button:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.add-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .loading {
@@ -106,7 +142,7 @@ h1 {
 .task-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: 16px;
   background-color: var(--bg-light);
   border-radius: 8px;
@@ -119,17 +155,36 @@ h1 {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+.task-checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.task-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.task-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .task-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .task-title {
   color: var(--text-primary);
   font-size: 15px;
   font-weight: 500;
+  word-break: break-word;
 }
 
 .task-title.completed {
@@ -153,15 +208,21 @@ h1 {
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.delete-button:hover {
+.delete-button:hover:not(:disabled) {
   background-color: var(--danger-color);
   color: white;
 }
 
-.delete-button:active {
+.delete-button:active:not(:disabled) {
   transform: scale(0.95);
+}
+
+.delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .empty-message {
@@ -182,12 +243,15 @@ h1 {
   }
 
   .task-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .task-content {
+    flex: 1 1 100%;
   }
 
   .delete-button {
-    width: 100%;
+    flex: 1 1 auto;
   }
 }

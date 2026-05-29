@@ -60,9 +60,39 @@ public class TasksController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateTask(int id, [FromBody] UpdateTaskDto dto)
+    {
+        var task = await _context.Tasks.FindAsync(id);
+        if (task == null)
+        {
+            return NotFound();
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Title))
+        {
+            task.Title = dto.Title.Trim();
+        }
+
+        if (dto.IsCompleted.HasValue)
+        {
+            task.IsCompleted = dto.IsCompleted.Value;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
 
 public class CreateTaskDto
 {
     public string Title { get; set; } = string.Empty;
+}
+
+public class UpdateTaskDto
+{
+    public string? Title { get; set; }
+    public bool? IsCompleted { get; set; }
 }
