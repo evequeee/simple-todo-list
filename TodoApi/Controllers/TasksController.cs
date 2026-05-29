@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TodoApi.Data;
 using TodoApi.Models;
+using TodoApi.Services;
 
 namespace TodoApi.Controllers;
 
@@ -9,19 +8,17 @@ namespace TodoApi.Controllers;
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
-    private readonly TodoContext _context;
+    private readonly ITaskService _taskService;
 
-    public TasksController(TodoContext context)
+    public TasksController(ITaskService taskService)
     {
-        _context = context;
+        _taskService = taskService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasks()
     {
-        var tasks = await _context.Tasks
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
+        var tasks = await _taskService.GetAllTasksAsync();
         return Ok(tasks);
     }
 
@@ -33,30 +30,18 @@ public class TasksController : ControllerBase
             return BadRequest("Title is required");
         }
 
-        var task = new TaskItem
-        {
-            Title = dto.Title.Trim(),
-            IsCompleted = false,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
-
+        var task = await _taskService.CreateTaskAsync(dto.Title);
         return CreatedAtAction(nameof(GetTasks), new { id = task.Id }, task);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
-        var task = await _context.Tasks.FindAsync(id);
-        if (task == null)
+        var success = await _taskService.DeleteTaskAsync(id);
+        if (!success)
         {
             return NotFound();
         }
-
-        _context.Tasks.Remove(task);
-        await _context.SaveChangesAsync();
 
         return NoContent();
     }
@@ -64,23 +49,11 @@ public class TasksController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateTask(int id, [FromBody] UpdateTaskDto dto)
     {
-        var task = await _context.Tasks.FindAsync(id);
-        if (task == null)
+        var success = await _taskService.UpdateTaskAsync(id, dto.IsCompleted, dto.Title);
+        if (!success)
         {
             return NotFound();
         }
-
-        if (!string.IsNullOrWhiteSpace(dto.Title))
-        {
-            task.Title = dto.Title.Trim();
-        }
-
-        if (dto.IsCompleted.HasValue)
-        {
-            task.IsCompleted = dto.IsCompleted.Value;
-        }
-
-        await _context.SaveChangesAsync();
 
         return NoContent();
     }

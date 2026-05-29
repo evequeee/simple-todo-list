@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const API_BASE_URL = 'https://localhost:7298/api/tasks';
+const API_BASE_URL = 'http://localhost:5000/api/tasks';
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -107,6 +109,27 @@ function App() {
     }
   };
 
+  const getFilteredTasks = () => {
+    let filtered = tasks;
+
+    if (filterStatus === 'completed') {
+      filtered = filtered.filter(task => task.isCompleted);
+    } else if (filterStatus === 'pending') {
+      filtered = filtered.filter(task => !task.isCompleted);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(task => task.title.toLowerCase().includes(query));
+    }
+
+    return filtered;
+  };
+
+  const filteredTasks = getFilteredTasks();
+  const completedCount = tasks.filter(t => t.isCompleted).length;
+  const pendingCount = tasks.filter(t => !t.isCompleted).length;
+
   return (
     <div className="app-container">
       <div className="app-card">
@@ -133,10 +156,43 @@ function App() {
           </button>
         </div>
 
+        <div className="filter-section">
+          <div className="search-box">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks..."
+              className="search-input"
+            />
+          </div>
+          
+          <div className="filter-buttons">
+            <button 
+              className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('all')}
+            >
+              All ({tasks.length})
+            </button>
+            <button 
+              className={`filter-btn ${filterStatus === 'pending' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('pending')}
+            >
+              Pending ({pendingCount})
+            </button>
+            <button 
+              className={`filter-btn ${filterStatus === 'completed' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('completed')}
+            >
+              Done ({completedCount})
+            </button>
+          </div>
+        </div>
+
         {loading && <p className="loading">Loading...</p>}
 
         <ul className="task-list">
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <li key={task.id} className="task-item">
               <div className="task-checkbox-group">
                 <input
@@ -167,8 +223,12 @@ function App() {
           ))}
         </ul>
 
-        {tasks.length === 0 && !loading && (
-          <p className="empty-message">No tasks yet. Add one to get started!</p>
+        {filteredTasks.length === 0 && !loading && (
+          <p className="empty-message">
+            {searchQuery || filterStatus !== 'all' 
+              ? 'No tasks match your filters.' 
+              : 'No tasks yet. Add one to get started!'}
+          </p>
         )}
       </div>
     </div>
